@@ -268,7 +268,7 @@ int main()
     		else
     		{
                 //if ranks are equal we take minimum number node
-    			parents[parent[1]] = parent[0];
+    			      parents[parent[1]] = parent[0];
                 rank[parent[0]]++;
     		}    
     		
