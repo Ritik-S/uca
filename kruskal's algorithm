@@ -1,0 +1,287 @@
+/* Assignment -> Implement Kruskal's Algorithm using self-made Priority Queue 
+and Union find or Disjoint set Union Algorithm to detect cycle. */
+
+// Time Complexity of Kruskal's Algorithm using Union Find -> O(ElogE + EV)
+// Time Complexity of Kruskal's Algorithm using Disjoint set Union by rank and Path compression -> O(ElogE + ElogV)
+
+
+/*
+
+/*
+ * Time complexity of priority queue:
+ *
+ * push  : O(log(n))
+ *
+ * pop   : O(log(n))
+ *
+ * front : O(1) 
+*/
+
+/*total_size is memory allocated to priority_queue
+call is just a variable used to know if we need to allocate memory or not
+priority_queue is our container which uses heap to store data according to their priority*/
+#include<bits/stdc++.h>
+using namespace std; 
+template <typename T>
+class PQ
+{
+
+
+private: 
+
+int total_size = 10;
+int  call = 0;
+
+
+//dynamic priority_queue which is basically complete binary tree in the form of array
+T* priority_queue;
+
+int size = 0;
+
+bool com(T a , T b)
+    {
+      
+        return a.weight < b.weight;
+    }
+//allocates memory to priority_queue
+public : 
+void allocate_memory_to_priority_queue()
+ {
+    //call == 0 means no memory has been allocated to our priority_queue
+
+    if(call == 0){
+
+      //allocating memory to priority_queue
+
+      priority_queue = (T*) calloc(total_size , sizeof(priority_queue[0]) );
+      return ;
+    }
+    //every time priority_queue is about to get full total size doubles itself
+
+    total_size *= 2;
+    T* temp;
+
+    temp = (T*) calloc(total_size ,sizeof(priority_queue[0]));
+    for(int i = 0 ; i < (int) size; ++i)
+    temp[i] = priority_queue[i];
+    priority_queue = temp;
+
+
+ }
+
+//function to check is priority_queue is empty or not
+
+bool is_empty()
+ {
+    return (size == 0);
+ }
+//function to get size of priority_queue
+
+int  get_size()
+ {
+    return size;
+ }
+//return minimum element if it is min heap or maximum element if it is max heap in O(1)
+
+T top()
+ {
+    assert(size > 0);
+    return priority_queue[0];
+ }
+
+//function to push inside priority_queue in O(log(n)) time
+
+void push(T element)
+ {
+    if(!call || size == total_size - 1)
+    {
+        allocate_memory_to_priority_queue();
+
+    }
+
+    //pushing element in such a way that complete binary tree properties are still maintained
+    priority_queue[size] = element;
+    size++;
+    call++;
+    int  childIndex = size - 1;
+    while(childIndex>0)
+    {
+
+
+    int  parentIndex = (childIndex - 1)/2;
+    
+
+    //for min heap child should never be smaller than parent and for max heap child should never be greater than parent
+    if(com(priority_queue[childIndex] , priority_queue[parentIndex]))
+    {
+        T temp= priority_queue[childIndex];
+        priority_queue[childIndex] = priority_queue[parentIndex];
+        priority_queue[parentIndex] = temp;
+    }
+    else
+    {
+        break;
+    }
+    childIndex = parentIndex;
+
+    }
+    
+ }
+
+//function to remove element from priority_queue on the basis of priority in O(log(n)) time complexity.
+
+T pop()
+ {
+    T ans = priority_queue[0];
+    priority_queue[0] = priority_queue[size-1];
+    size--;
+   
+    // down heapify
+
+    int parentIndex = 0 ;
+
+    //for any index it's children are stored at 2 * parentIndex + 1 and at 2 * parentIndex + 2.
+
+    int leftChildIndex = 2 * parentIndex + 1;
+    int rightChildIndex = 2 * parentIndex + 2;
+
+    //maintaining the property of complete binary tree
+
+    while(leftChildIndex < size)
+    {
+        int minIndex = parentIndex;
+
+        //finding minimum between parent, left child and right child
+
+        if(leftChildIndex < size && !com(priority_queue[minIndex] , priority_queue[leftChildIndex]))
+        {
+                minIndex = leftChildIndex;
+        }
+        if(rightChildIndex < size && !com( priority_queue[minIndex] , priority_queue[rightChildIndex] ))
+        {
+                minIndex = rightChildIndex;
+        }
+
+        //if minIndex is parent means it satisfies properties of complete binary tree
+
+        if(minIndex == parentIndex)
+        {
+                break;
+        }
+
+        //swapping to make it complete binary tree
+
+        T temp = priority_queue[minIndex];
+        priority_queue[minIndex] = priority_queue[parentIndex];
+        priority_queue[parentIndex] =  temp;
+        parentIndex = minIndex;
+        leftChildIndex = 2 * parentIndex + 1;
+        rightChildIndex = 2 * parentIndex + 2;
+    }
+    
+    return ans ;
+    
+
+ }
+
+ 
+ };
+ class edges
+ {
+ 	public: 
+ 	int node1, node2, weight;
+ 	
+ 	edges(int node1, int node2, int weight)
+ 	{
+ 		this -> node1 = node1 ;
+ 		this -> node2 = node2 ; 
+ 		this -> weight = weight;
+ 	}
+ };
+
+int find_parent(int parent[] , int vertex)
+{
+    if(parent[vertex] == vertex)
+    {
+        return vertex;
+    }
+    
+    //path compression
+    return parent[vertex] = find_parent(parent , parent[vertex]);
+}
+int main()
+ {
+    
+    int total_vertex, total_edges; 
+    cin>>total_vertex>>total_edges;
+    PQ < edges > pq;
+    vector< edges > ans;
+    for(int i = 0 ; i < total_edges ; ++i)
+    {
+    	int n1, n2, w; 
+    	cin>>n1>>n2>>w;
+    	edges  edge(min(n1 , n2) , max(n1 , n2 ) , w);
+    	
+    	pq.push(edge);
+    	
+    	
+    	
+    }
+    // cout<<pq.top().weight<<endl;
+    
+    int parents[total_vertex];
+    int rank[total_vertex ];
+    
+     for(int i = 0 ; i < total_vertex ; i++)
+    {
+        parents[i] = i;
+        rank[i] = 0; 
+    }
+    
+    vector<edges> tree ;
+    
+    while(pq.get_size() > 0 )
+    {
+    	edges edge = pq.top();
+    	pq.pop();
+    	int node1 = edge.node1; 
+    	int node2 = edge.node2;
+    	int weight = edge.weight; 
+    	// cerr<<weight<<endl;
+    	vector<int> parent(2);
+    	parent[0] = find_parent(parents , node1);
+    	parent[1] = find_parent(parents , node2);
+    	
+    	
+    	if(parent[0] != parent[1])
+    	{
+    		ans.push_back(edge);
+    		
+    		if(rank[parent[0]]<rank[parent[1]])
+    		{
+    			parents[parent[0]] = parent[1];
+    		}
+    		else if(rank[parent[0]]>rank[parent[1]])
+    		  parents[parent[1]] = parent[0];
+    		else
+    		{
+    			parents[parent[1]] = parent[0];
+          rank[parent[0]]++;
+    		}    
+    		
+    		    
+    	    
+    		
+    	}
+    }
+    
+    
+     for(auto tree : ans)
+     {
+      	cout<<tree.node1<<' '<<tree.node2<<' '<<tree.weight<<endl;
+     }
+    
+    
+    
+ 	
+ }
